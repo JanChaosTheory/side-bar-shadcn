@@ -1,7 +1,17 @@
 import type { NextConfig } from "next";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  turbopack: {
+    root: projectRoot,
+    // Turbopack can resolve @import "tailwindcss" from the parent Desktop folder; force the real package.
+    resolveAlias: {
+      tailwindcss: path.join(projectRoot, "node_modules/tailwindcss"),
+    },
+  },
 };
 
 export default nextConfig;
