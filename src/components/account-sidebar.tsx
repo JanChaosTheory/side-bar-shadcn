@@ -60,12 +60,12 @@ import {
   ShieldCheck,
   Settings,
   ScanLine,
+  IdCard,
   MessageSquare,
   Mail,
   Gift,
   Check,
   Phone,
-  MailOpen,
   ExternalLink,
   LayoutGrid,
 } from "lucide-react";
@@ -85,6 +85,9 @@ const INACTIVE_TOAST_MESSAGE =
   "This button is not active since it leads outside of the Account sidebar. Try another one.";
 const INACTIVE_TOAST_DURATION_MS = 2500;
 
+/** Matches Tailwind `duration-200` on the Sign out footer fade. */
+const SIGN_OUT_FADE_MS = 200;
+
 /**
  * Inactive buttons (lead outside Account sidebar): grid button, Deposit, Withdraw, History, Live
  * support, Promo code, Sign out. "My profile" opens MyProfilePanel. Each inactive is wired to
@@ -101,29 +104,153 @@ function SubScreenHeader({
   onClose: () => void;
 }) {
   return (
-    <SheetHeader className="sticky top-0 z-10 flex min-h-[70px] shrink-0 flex-row items-center space-y-0 p-0 px-5">
+    <SheetHeader className="sticky top-0 z-10 grid min-h-[70px] shrink-0 grid-cols-[35px_1fr_35px] items-center gap-1 space-y-0 p-0 px-5">
       <Button
         variant="ghost"
         size="icon"
-        className="size-[35px] rounded-full text-[#E0E0E0] hover:bg-white/10"
+        className="size-[35px] justify-self-start rounded-full text-[#E0E0E0] hover:bg-white/10"
         aria-label="Back"
         onClick={onBack}
       >
-        <ChevronLeft className="size-6" />
+        <ChevronLeft className="size-[22px]" strokeWidth={2} />
       </Button>
-      <SheetTitle className="ml-2 border-0 p-0 text-[15px] font-bold text-[#E0E0E0] shadow-none">
+      <SheetTitle className="border-0 p-0 text-center text-[15px] font-bold text-[#E0E0E0] shadow-none">
         {title}
       </SheetTitle>
       <Button
         variant="ghost"
         size="icon"
-        className="ml-auto size-[35px] rounded-full text-[#E0E0E0] hover:bg-white/10"
+        className="size-[35px] justify-self-end rounded-full text-[#E0E0E0] hover:bg-white/10"
         aria-label="Close"
         onClick={onClose}
       >
-        <X className="size-6" />
+        <X className="size-[22px]" strokeWidth={2} />
       </Button>
     </SheetHeader>
+  );
+}
+
+/** Empty-state artwork: open envelope, card with X, gradients, sparks (reference inbox). */
+function InboxEmptyIllustration({ className }: { className?: string }) {
+  const accent = "#64748b";
+  return (
+    <svg
+      className={cn(
+        "mx-auto w-[min(248px,78vw)] max-w-[248px] text-slate-500",
+        className
+      )}
+      viewBox="0 0 240 216"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <defs>
+        <linearGradient id="inbox-card-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#5c5c68" />
+          <stop offset="100%" stopColor="#45454f" />
+        </linearGradient>
+        <linearGradient id="inbox-env-inner" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#3f3f48" />
+          <stop offset="100%" stopColor="#2e2e35" />
+        </linearGradient>
+        <linearGradient id="inbox-env-pocket" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#4b4b56" />
+          <stop offset="100%" stopColor="#3a3a44" />
+        </linearGradient>
+        <linearGradient id="inbox-flap-top" x1="0%" y1="100%" x2="0%" y2="0%">
+          <stop offset="0%" stopColor="#383840" />
+          <stop offset="100%" stopColor="#52525e" />
+        </linearGradient>
+        <linearGradient id="inbox-flap-shade" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#2a2a32" stopOpacity={0.9} />
+          <stop offset="100%" stopColor="#45454f" stopOpacity={0.5} />
+        </linearGradient>
+        <filter
+          id="inbox-drop"
+          x="-25%"
+          y="-25%"
+          width="150%"
+          height="150%"
+        >
+          <feDropShadow
+            dx="0"
+            dy="5"
+            stdDeviation="8"
+            floodColor="#000"
+            floodOpacity="0.4"
+          />
+        </filter>
+      </defs>
+
+      {/* Floating accents */}
+      <g fill={accent} opacity={0.38}>
+        <circle cx="44" cy="156" r="2.2" />
+        <circle cx="196" cy="168" r="1.5" />
+        <circle cx="54" cy="68" r="1.8" />
+      </g>
+      <circle
+        cx="38"
+        cy="178"
+        r="4"
+        fill="none"
+        stroke={accent}
+        strokeWidth={1.25}
+        opacity={0.42}
+      />
+      <path
+        fill={accent}
+        opacity={0.4}
+        d="M22 36 32 54h-5l12 26L18 48h8z"
+      />
+      <path
+        fill={accent}
+        opacity={0.32}
+        d="M194 138 200 150h-4l8 18-12-16h5z"
+      />
+      <path
+        fill={accent}
+        opacity={0.43}
+        d="M192 32 L196.5 39 L192 46 L187.5 39 Z"
+      />
+      <g fill={accent} opacity={0.36}>
+        <rect x="168" y="26" width="1.8" height="11" rx="0.4" />
+        <rect x="163.5" y="30.5" width="11" height="1.8" rx="0.4" />
+      </g>
+
+      <g filter="url(#inbox-drop)" transform="translate(120, 128)">
+        <rect
+          x="-32"
+          y="-62"
+          width="64"
+          height="50"
+          rx="4"
+          fill="url(#inbox-card-grad)"
+        />
+        <path
+          stroke="#9ca3af"
+          strokeWidth="2"
+          strokeLinecap="round"
+          opacity={0.42}
+          d="M-14 -44 L14 -32 M14 -44 L-14 -32"
+        />
+        <path
+          d="M-78 14 L0 -66 L78 14 L78 68 L-78 68 Z"
+          fill="url(#inbox-env-inner)"
+        />
+        <path
+          d="M-74 12 L0 -62 L74 12 L74 64 L-74 64 Z"
+          fill="#25252c"
+        />
+        <path
+          d="M-78 14 L0 50 L78 14 Z"
+          fill="url(#inbox-env-pocket)"
+        />
+        <path d="M-78 14 L0 -66 L78 14 L0 38 Z" fill="url(#inbox-flap-top)" />
+        <path
+          d="M0 -66 L78 14 L0 38 L-78 14 Z"
+          fill="url(#inbox-flap-shade)"
+        />
+      </g>
+    </svg>
   );
 }
 
@@ -181,6 +308,23 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
   const [ghostMode, setGhostMode] = React.useState(false);
   const [earlyAccess, setEarlyAccess] = React.useState(false);
   const [myProfileOpen, setMyProfileOpen] = React.useState(false);
+  const [signOutFooterMounted, setSignOutFooterMounted] = React.useState(true);
+  const [signOutFooterOpaque, setSignOutFooterOpaque] = React.useState(true);
+
+  React.useEffect(() => {
+    if (screen === "main") {
+      setSignOutFooterMounted(true);
+      const frame = requestAnimationFrame(() => {
+        setSignOutFooterOpaque(true);
+      });
+      return () => cancelAnimationFrame(frame);
+    }
+    setSignOutFooterOpaque(false);
+    const t = window.setTimeout(() => {
+      setSignOutFooterMounted(false);
+    }, SIGN_OUT_FADE_MS);
+    return () => clearTimeout(t);
+  }, [screen]);
 
   const goTo = (s: Screen) => setScreen(s);
   const goBack = () => setScreen("main");
@@ -241,7 +385,7 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
             )}
           >
             <MainHeader onClose={closeEntireSidebar} />
-            <FieldGroup className="min-h-0 flex-1 gap-0 overflow-hidden p-0">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
               <ScrollArea hideScrollbar className="min-h-0 min-w-0 flex-1">
               <ItemGroup className="gap-4 p-4">
               {/* Profile card */}
@@ -409,19 +553,31 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
               </Card>
               </ItemGroup>
               </ScrollArea>
-
-              {/* Sign out — pinned to bottom of sheet; ~1.5 grid tiles wide, centered */}
-              <SheetFooter className="mt-auto flex w-full shrink-0 flex-col items-center space-y-0 border-0 p-0 px-4 pb-6 pt-4">
-                <Button
-                  variant="outline"
-                  className="h-9 w-[calc((100%-18px)/2)] max-w-[min(100%,240px)] shrink-0 rounded-full px-4 text-sm font-medium text-[#CFAEFF] bg-[#322A3C] border-0 shadow-none transition-all duration-[160ms] ease hover:bg-[#3A3146] hover:text-[#CFAEFF] hover:shadow-none focus-visible:ring-0 focus-visible:border-0"
-                  onClick={handleInactiveClick}
-                >
-                  Sign out
-                </Button>
-              </SheetFooter>
-            </FieldGroup>
+            </div>
           </Card>
+
+          {/* Sign out — outside slide layer; fade in/out when switching main ↔ sub-screens */}
+          {signOutFooterMounted ? (
+            <SheetFooter
+              className={cn(
+                "relative z-[5] mt-auto flex w-full shrink-0 flex-col items-center space-y-0 border-0 bg-[#141114] p-0 px-4 pb-6 pt-4",
+                "transition-opacity duration-200 ease-out motion-reduce:transition-none",
+                signOutFooterOpaque
+                  ? "opacity-100"
+                  : "pointer-events-none opacity-0"
+              )}
+              aria-hidden={!signOutFooterOpaque}
+            >
+              <Button
+                variant="outline"
+                className="h-9 w-[calc((100%-18px)/2)] max-w-[min(100%,240px)] shrink-0 rounded-full px-4 text-sm font-medium text-[#CFAEFF] bg-[#322A3C] border-0 shadow-none transition-colors duration-[160ms] ease hover:bg-[#3A3146] hover:text-[#CFAEFF] hover:shadow-none focus-visible:ring-0 focus-visible:border-0"
+                tabIndex={signOutFooterOpaque ? undefined : -1}
+                onClick={handleInactiveClick}
+              >
+                Sign out
+              </Button>
+            </SheetFooter>
+          ) : null}
 
           {/* Sub-screens: slide in from right */}
           {(["security", "preferences", "verification", "inbox"] as const).map(
@@ -789,45 +945,46 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
                               </Avatar>
                             ),
                             card: (
-                              <Card className="min-w-0 flex-1 gap-0 rounded-xl border border-zinc-700 bg-zinc-800 py-0 shadow-none ring-0">
-                                <CardContent className="px-4 py-4">
+                              <Card className="min-w-0 flex-1 gap-0 rounded-[14px] border border-zinc-700/90 bg-[#1A1A1E] py-0 shadow-none ring-0">
+                                <CardContent className="px-4 pb-4 pt-4">
                                   <CardHeader className="flex flex-row items-center gap-3 border-0 p-0">
-                                    <ScanLine className="size-5 shrink-0 text-[#E0E0E0]" />
-                                    <CardTitle className="border-0 p-0 text-base font-bold text-[#E0E0E0] shadow-none">
+                                    <IdCard
+                                      className="size-6 shrink-0 text-white"
+                                      strokeWidth={1.5}
+                                      aria-hidden
+                                    />
+                                    <CardTitle className="border-0 p-0 text-base font-bold leading-snug text-white shadow-none">
                                       Identity Verification
                                     </CardTitle>
                                   </CardHeader>
-                                  <CardDescription className="mt-2 text-sm text-[#8F8F8F]">
-                                  Before you start, have your{" "}
-                                  <Badge
-                                    variant="outline"
-                                    className="mx-0.5 inline h-5 border-zinc-600 px-1.5 align-middle font-normal text-[#E0E0E0] hover:bg-transparent"
-                                  >
-                                    ID
-                                  </Badge>{" "}
-                                  and{" "}
-                                  <Badge
-                                    variant="outline"
-                                    className="mx-0.5 inline h-5 border-zinc-600 px-1.5 align-middle font-normal text-[#E0E0E0] hover:bg-transparent"
-                                  >
-                                    proof of address
-                                  </Badge>{" "}
-                                  ready to speed things up. The list of accepted
-                                  documents can be found{" "}
-                                  <Button
-                                    type="button"
-                                    variant="link"
-                                    className="inline-flex h-auto gap-0.5 p-0 text-[#CCA6FF] hover:underline"
-                                    onClick={(e) => e.preventDefault()}
-                                  >
-                                    here
-                                    <ExternalLink className="inline size-3.5" />
+                                  <CardDescription className="mt-4 text-sm font-normal leading-relaxed text-[#A1A1AA]">
+                                    Before you start, have your{" "}
+                                    <strong className="font-bold text-white">
+                                      ID
+                                    </strong>{" "}
+                                    and{" "}
+                                    <strong className="font-bold text-white">
+                                      proof of address
+                                    </strong>{" "}
+                                    ready to speed things up. The list of accepted
+                                    documents can be found{" "}
+                                    <Button
+                                      type="button"
+                                      variant="link"
+                                      className="inline-flex h-auto items-center gap-1 p-0 align-baseline text-sm font-normal text-white underline decoration-white/80 underline-offset-4 hover:text-white hover:decoration-white"
+                                      onClick={(e) => e.preventDefault()}
+                                    >
+                                      <ExternalLink
+                                        className="size-3.5 shrink-0 opacity-90"
+                                        aria-hidden
+                                      />
+                                      here
+                                    </Button>
+                                    .
+                                  </CardDescription>
+                                  <Button className="mt-5 h-[49px] w-full rounded-full bg-[#CCFF00] text-base font-bold text-black hover:bg-[#b8e600]">
+                                    Verify identity
                                   </Button>
-                                  .
-                                </CardDescription>
-                                <Button className="mt-3 h-[49px] w-full rounded-full bg-[#CCFF00] text-base font-bold text-black hover:bg-[#b8e600]">
-                                  Verify identity
-                                </Button>
                                 </CardContent>
                               </Card>
                             ),
@@ -897,11 +1054,11 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
                                 role="listitem"
                                 size="xs"
                                 variant="default"
-                                className="border-0 bg-transparent py-0 shadow-none outline-none focus-visible:ring-0"
+                                className="items-start border-0 bg-transparent py-0 shadow-none outline-none focus-visible:ring-0"
                               >
                                 <ItemMedia
                                   variant="icon"
-                                  className="w-4 justify-start text-[#8F8F8F]"
+                                  className="w-4 shrink-0 justify-start pt-0.5 text-[#8F8F8F]"
                                 >
                                   <Badge
                                     variant="outline"
@@ -911,19 +1068,21 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
                                     •
                                   </Badge>
                                 </ItemMedia>
-                                <ItemDescription className="line-clamp-none text-xs text-[#8F8F8F]">
-                                  Stronger security & fraud protection
-                                </ItemDescription>
+                                <ItemContent className="min-w-0 flex-1">
+                                  <ItemDescription className="line-clamp-none text-left text-xs text-[#8F8F8F]">
+                                    Stronger security & fraud protection
+                                  </ItemDescription>
+                                </ItemContent>
                               </Item>
                               <Item
                                 role="listitem"
                                 size="xs"
                                 variant="default"
-                                className="border-0 bg-transparent py-0 shadow-none outline-none focus-visible:ring-0"
+                                className="items-start border-0 bg-transparent py-0 shadow-none outline-none focus-visible:ring-0"
                               >
                                 <ItemMedia
                                   variant="icon"
-                                  className="w-4 justify-start text-[#8F8F8F]"
+                                  className="w-4 shrink-0 justify-start pt-0.5 text-[#8F8F8F]"
                                 >
                                   <Badge
                                     variant="outline"
@@ -933,19 +1092,21 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
                                     •
                                   </Badge>
                                 </ItemMedia>
-                                <ItemDescription className="line-clamp-none text-xs text-[#8F8F8F]">
-                                  Faster & unlimited withdrawals
-                                </ItemDescription>
+                                <ItemContent className="min-w-0 flex-1">
+                                  <ItemDescription className="line-clamp-none text-left text-xs text-[#8F8F8F]">
+                                    Faster & unlimited withdrawals
+                                  </ItemDescription>
+                                </ItemContent>
                               </Item>
                               <Item
                                 role="listitem"
                                 size="xs"
                                 variant="default"
-                                className="border-0 bg-transparent py-0 shadow-none outline-none focus-visible:ring-0"
+                                className="items-start border-0 bg-transparent py-0 shadow-none outline-none focus-visible:ring-0"
                               >
                                 <ItemMedia
                                   variant="icon"
-                                  className="w-4 justify-start text-[#8F8F8F]"
+                                  className="w-4 shrink-0 justify-start pt-0.5 text-[#8F8F8F]"
                                 >
                                   <Badge
                                     variant="outline"
@@ -955,9 +1116,11 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
                                     •
                                   </Badge>
                                 </ItemMedia>
-                                <ItemDescription className="line-clamp-none text-xs text-[#8F8F8F]">
-                                  Unlock full features & VIP perks
-                                </ItemDescription>
+                                <ItemContent className="min-w-0 flex-1">
+                                  <ItemDescription className="line-clamp-none text-left text-xs text-[#8F8F8F]">
+                                    Unlock full features & VIP perks
+                                  </ItemDescription>
+                                </ItemContent>
                               </Item>
                             </ItemGroup>
                           </CardDescription>
@@ -976,25 +1139,27 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
                       onBack={goBack}
                       onClose={closeEntireSidebar}
                     />
-                    <ScrollArea hideScrollbar className="min-h-0 min-w-0 flex-1">
-                      <Card className="min-h-[min(100%,28rem)] rounded-none border-0 bg-transparent py-0 shadow-none ring-0">
-                        <CardContent className="flex flex-col items-center justify-center px-5 py-12">
-                          <MailOpen className="mx-auto size-16 text-zinc-600" />
-                          <CardTitle className="mt-4 border-0 p-0 text-center text-base font-bold text-[#E0E0E0] shadow-none">
+                    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+                      <Card className="flex min-h-0 flex-1 flex-col rounded-none border-0 bg-transparent py-0 shadow-none ring-0">
+                        <CardContent className="flex flex-1 flex-col items-center justify-center px-6 py-16 pb-14">
+                          <InboxEmptyIllustration />
+                          <CardTitle className="mt-4 border-0 p-0 text-center text-lg font-semibold tracking-tight text-white shadow-none">
                             Nothing new
                           </CardTitle>
-                          <CardDescription className="mt-1 text-center text-sm text-[#8F8F8F]">
+                          <CardDescription className="mt-2 max-w-[280px] text-center text-sm font-normal leading-relaxed text-[#8F8F8F]">
                             You&apos;re all caught up.
                           </CardDescription>
                           <Button
-                            className="mt-4 h-[49px] rounded-full bg-[#261F2B] px-6 text-sm font-bold hover:bg-[#2C2532]"
+                            type="button"
+                            className="mt-9 h-[49px] min-w-[200px] rounded-full bg-[#261F2B] px-8 text-[15px] font-bold shadow-none hover:bg-[#2C2532] focus-visible:ring-0"
                             style={{ color: ACCENT_PURPLE }}
+                            onClick={handleInactiveClick}
                           >
-                            View earlier (3)
+                            View earlier (15)
                           </Button>
                         </CardContent>
                       </Card>
-                    </ScrollArea>
+                    </div>
                   </>
                 )}
               </Card>
