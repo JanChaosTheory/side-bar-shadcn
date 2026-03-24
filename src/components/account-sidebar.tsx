@@ -12,6 +12,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Alert,
+  AlertAction,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { toast } from "sonner";
+import {
   X,
   ChevronLeft,
   AlertCircle,
@@ -35,7 +54,6 @@ import { MyProfilePanel } from "@/components/my-profile-panel";
 
 type Screen = "main" | "security" | "preferences" | "verification" | "inbox";
 
-const SURFACE_1 = "#211C25";
 const AVATAR_BG = "#A8C7FC";
 const ACCENT_PURPLE = "#CCA6FF";
 const SUCCESS = "#55A370";
@@ -73,7 +91,9 @@ function SubScreenHeader({
         <ChevronLeft className="size-6" />
         <span className="sr-only">Back</span>
       </Button>
-      <span className="text-[15px] font-bold text-[#E0E0E0] ml-2">{title}</span>
+      <CardTitle className="ml-2 border-0 p-0 text-[15px] font-bold text-[#E0E0E0] shadow-none">
+        {title}
+      </CardTitle>
       <Button
         variant="ghost"
         size="icon"
@@ -89,8 +109,10 @@ function SubScreenHeader({
 
 function MainHeader({ onClose }: { onClose: () => void }) {
   return (
-    <header className="min-h-[48px] px-5 py-3 flex items-center gap-2 shrink-0">
-      <span className="text-[15px] font-bold text-[#E0E0E0]">Account</span>
+    <header className="flex min-h-[48px] shrink-0 items-center gap-2 px-5 py-3">
+      <CardTitle className="border-0 p-0 text-[15px] font-bold text-[#E0E0E0] shadow-none">
+        Account
+      </CardTitle>
       <Button
         variant="ghost"
         size="icon"
@@ -105,10 +127,29 @@ function MainHeader({ onClose }: { onClose: () => void }) {
 }
 
 const gridButtonClass =
-  "group flex flex-col items-center justify-center gap-1.5 p-3 h-[64px] bg-[#211C25] border-2 border-[#2C2532] rounded-xl hover:bg-[#261F2B] transition-colors text-[#A9A6B3] [&_svg]:size-5 [&_svg]:text-[#A9A6B3]";
+  "group flex h-[64px] w-full flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-[#2C2532] bg-[#211C25] p-3 font-normal text-[#A9A6B3] shadow-none transition-colors hover:bg-[#261F2B] hover:text-[#A9A6B3] focus-visible:border-[#2C2532] focus-visible:ring-0 [&_svg]:size-5 [&_svg]:text-[#A9A6B3]";
 
 const gridIconWrapClass =
   "inline-flex transition-transform duration-200 ease-out origin-center group-hover:scale-[1.18]";
+
+function AccountGridButton({
+  children,
+  onClick,
+}: {
+  children: React.ReactNode;
+  onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
+}) {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      className={gridButtonClass}
+      onClick={onClick}
+    >
+      {children}
+    </Button>
+  );
+}
 
 /** Toggle styling for Ghost mode & Early access: muted grey-purple track, soft grey thumb, compact pill. */
 const preferenceSwitchClass =
@@ -119,9 +160,7 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
   const [screen, setScreen] = React.useState<Screen>("main");
   const [ghostMode, setGhostMode] = React.useState(false);
   const [earlyAccess, setEarlyAccess] = React.useState(false);
-  const [showInactiveToast, setShowInactiveToast] = React.useState(false);
   const [myProfileOpen, setMyProfileOpen] = React.useState(false);
-  const inactiveToastTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const goTo = (s: Screen) => setScreen(s);
   const goBack = () => setScreen("main");
@@ -141,23 +180,15 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
     }
   }, []);
 
-  /** Reusable handler for inactive buttons (lead outside Account sidebar). Shows toast instead of navigating. */
-  const handleInactiveClick = React.useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (inactiveToastTimeoutRef.current) clearTimeout(inactiveToastTimeoutRef.current);
-      setShowInactiveToast(true);
-      inactiveToastTimeoutRef.current = setTimeout(() => {
-        setShowInactiveToast(false);
-        inactiveToastTimeoutRef.current = null;
-      }, INACTIVE_TOAST_DURATION_MS);
-    },
-    []
-  );
-
-  React.useEffect(() => () => {
-    if (inactiveToastTimeoutRef.current) clearTimeout(inactiveToastTimeoutRef.current);
+  /** Reusable handler for inactive buttons (lead outside Account sidebar). Sonner toast ~2.5s. */
+  const handleInactiveClick = React.useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toast(INACTIVE_TOAST_MESSAGE, {
+      duration: INACTIVE_TOAST_DURATION_MS,
+      className:
+        "!bg-[#1E1A22] !border !border-[#2C2532] !text-[#E0E0E0] !rounded-xl !text-sm !shadow-lg",
+    });
   }, []);
 
   return (
@@ -175,43 +206,49 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
         side="right"
         showCloseButton={false}
         className={cn(
-          "w-[448px] max-w-[100vw] rounded-tl-[28px] rounded-bl-none rounded-r-none p-0 gap-0 overflow-y-auto",
+          "flex h-full max-h-dvh w-[448px] max-w-[100vw] flex-col overflow-hidden rounded-tl-[28px] rounded-bl-none rounded-r-none p-0 gap-0",
           "bg-[#141114] border-0 border-l border-[#2C2532]"
         )}
       >
-        <div className="relative flex flex-col min-h-full [font-family:var(--font-inter),sans-serif]">
-          {/* Main screen */}
+        <ScrollArea className="min-h-0 flex-1">
+        <div className="relative flex min-h-full flex-col [font-family:var(--font-inter),sans-serif]">
+          {/* Main screen — content height; max-h + inner scroll; Sign out below scroll (no mt-auto) */}
           <div
             className={cn(
-              "flex flex-col min-h-full transition-all duration-300 ease-in-out",
+              "flex w-full max-w-full flex-col overflow-hidden transition-all duration-300 ease-in-out max-h-[90vh]",
               screen === "main"
                 ? "translate-x-0 opacity-100"
-                : "-translate-x-full opacity-0 absolute inset-0 pointer-events-none"
+                : "-translate-x-full opacity-0 absolute inset-0 pointer-events-none min-h-full max-h-none"
             )}
           >
             <MainHeader onClose={closeEntireSidebar} />
-            <div className="flex flex-col flex-1 px-5">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
               {/* Profile card */}
-              <div className="rounded-[24px] p-[2px] border border-zinc-800/40">
-                <div className="bg-[#141114] rounded-[22.5px] h-[72px] flex items-center">
-                  <div
-                    className="size-[72px] rounded-full flex items-center justify-center shrink-0 text-xl font-bold text-zinc-800"
-                    style={{ backgroundColor: AVATAR_BG }}
+              <Card className="gap-0 rounded-[24px] border border-zinc-800/40 bg-transparent p-[2px] py-0 shadow-none ring-0">
+                <CardContent className="flex h-[72px] items-center rounded-[22.5px] bg-[#141114] p-0">
+                  <Avatar
+                    className="size-[72px] shrink-0 after:border-0"
                   >
-                    JA
-                  </div>
-                  <div className="ml-3 flex flex-col min-w-0">
-                    <span className="text-base font-bold text-white truncate">
+                    <AvatarFallback
+                      className="text-xl font-bold text-zinc-800"
+                      style={{ backgroundColor: AVATAR_BG }}
+                    >
+                      JA
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="ml-3 flex min-w-0 flex-col">
+                    <CardTitle className="truncate border-0 p-0 text-base font-bold text-white shadow-none">
                       JanChaos
-                    </span>
-                    <span className="text-[11px] text-yellow-400 whitespace-nowrap">
+                    </CardTitle>
+                    <CardDescription className="whitespace-nowrap text-[11px] text-yellow-400">
                       Phone number verified
-                    </span>
+                    </CardDescription>
                   </div>
-                  <div className="ml-auto flex items-center gap-2 shrink-0">
+                  <div className="ml-auto flex shrink-0 items-center gap-2">
                     <Button
                       variant="ghost"
-                      className="rounded-full h-[27px] px-3 text-xs font-medium bg-[#322A3C] text-[#CFAEFF] border-0 shadow-none transition-all duration-[160ms] ease hover:bg-[#3A3146] hover:text-[#CFAEFF] hover:shadow-none focus-visible:ring-0 focus-visible:border-0"
+                      className="h-[27px] rounded-full border-0 bg-[#322A3C] px-3 text-xs font-medium text-[#CFAEFF] shadow-none transition-all duration-[160ms] ease hover:bg-[#3A3146] hover:text-[#CFAEFF] hover:shadow-none focus-visible:border-0 focus-visible:ring-0"
                       onClick={() => setMyProfileOpen(true)}
                     >
                       My profile
@@ -220,130 +257,127 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="size-[27px] rounded-full bg-[#322A3C] text-[#CFAEFF] border-0 shadow-none transition-all duration-[160ms] ease hover:bg-[#3A3146] hover:text-[#CFAEFF] hover:shadow-none focus-visible:ring-0 focus-visible:border-0"
+                      className="size-[27px] rounded-full border-0 bg-[#322A3C] text-[#CFAEFF] shadow-none transition-all duration-[160ms] ease hover:bg-[#3A3146] hover:text-[#CFAEFF] hover:shadow-none focus-visible:border-0 focus-visible:ring-0"
                       onClick={handleInactiveClick}
                     >
                       <LayoutGrid className="size-4" />
                       <span className="sr-only">Grid</span>
                     </Button>
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
 
-              {/* Verification banner */}
-              <div className="mt-4 flex items-center gap-2 bg-[#1E1A22] rounded-2xl p-2 w-full min-h-[53px]">
-                <AlertCircle className="text-amber-500 size-8 shrink-0" />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-sm font-bold text-[#E0E0E0] whitespace-nowrap">
-                    You're not verified yet!
-                  </span>
-                  <span className="text-xs text-[#8F8F8F]">
+              {/* Verification banner — icon shrink-0; text flex-1 min-w-0; button fixed width so copy stays 2–3 lines */}
+              <Alert className="!mt-4 !flex w-full min-w-0 flex-row flex-nowrap items-center gap-3 rounded-2xl border-0 bg-[#1E1A22] !px-3 !py-3 shadow-none !ring-0 has-data-[slot=alert-action]:!pr-3">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-amber-500/20">
+                  <AlertCircle className="size-5 shrink-0 text-amber-500" />
+                </div>
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <AlertTitle className="whitespace-nowrap border-0 p-0 text-sm font-bold text-[#E0E0E0] shadow-none">
+                    You&apos;re not verified yet!
+                  </AlertTitle>
+                  <AlertDescription className="mt-0.5 min-w-0 text-left text-xs leading-snug text-[#8F8F8F]">
                     Enjoy faster payouts, safer play, and no limits by verifying
                     your account.
-                  </span>
+                  </AlertDescription>
                 </div>
-                <Button
-                  className="ml-auto shrink-0 bg-[#C8FF00] text-black font-bold text-sm rounded-full px-4 py-1.5 hover:bg-[#b8e600]"
-                  onClick={() => goTo("verification")}
-                >
-                  Verify Now
-                </Button>
-              </div>
+                <AlertAction className="static top-auto right-auto w-[110px] shrink-0 translate-y-0 self-center">
+                  <Button
+                    className="w-full shrink-0 justify-center rounded-full bg-[#C8FF00] px-0 py-1.5 text-sm font-bold text-black hover:bg-[#b8e600]"
+                    onClick={() => goTo("verification")}
+                  >
+                    Verify Now
+                  </Button>
+                </AlertAction>
+              </Alert>
 
               {/* Wallet */}
-              <div className="py-3">
-                <h2 className="text-base font-bold text-[#E0E0E0]">Wallet</h2>
-                <div className="grid grid-cols-3 gap-[9px] mt-2">
+              <Card className="gap-2 border-0 bg-transparent py-3 shadow-none ring-0">
+                <CardHeader className="p-0">
+                  <CardTitle className="border-0 p-0 text-base font-bold text-[#E0E0E0] shadow-none">
+                    Wallet
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-0 pb-0 pt-0">
+                <div className="grid grid-cols-3 gap-[9px]">
                   {/* INACTIVE: leads outside Account sidebar */}
-                  <button type="button" className={gridButtonClass} onClick={handleInactiveClick}>
+                  <AccountGridButton onClick={handleInactiveClick}>
                     <span className={gridIconWrapClass}>
                       <ArrowUpFromLine className="size-5" />
                     </span>
                     <span className="text-xs">Deposit</span>
-                  </button>
-                  {/* INACTIVE: leads outside Account sidebar */}
-                  <button type="button" className={gridButtonClass} onClick={handleInactiveClick}>
+                  </AccountGridButton>
+                  <AccountGridButton onClick={handleInactiveClick}>
                     <span className={gridIconWrapClass}>
                       <ArrowDownToLine className="size-5" />
                     </span>
                     <span className="text-xs">Withdraw</span>
-                  </button>
-                  {/* INACTIVE: leads outside Account sidebar */}
-                  <button type="button" className={gridButtonClass} onClick={handleInactiveClick}>
+                  </AccountGridButton>
+                  <AccountGridButton onClick={handleInactiveClick}>
                     <span className={gridIconWrapClass}>
                       <Clock className="size-5" />
                     </span>
                     <span className="text-xs">History</span>
-                  </button>
+                  </AccountGridButton>
                 </div>
-              </div>
+                </CardContent>
+              </Card>
 
               {/* Account */}
-              <div className="py-3">
-                <h2 className="text-base font-bold text-[#E0E0E0]">Account</h2>
-                <div className="grid grid-cols-3 gap-[9px] mt-2">
-                  <button
-                    type="button"
-                    className={gridButtonClass}
-                    onClick={() => goTo("security")}
-                  >
+              <Card className="gap-2 border-0 bg-transparent py-3 shadow-none ring-0">
+                <CardHeader className="p-0">
+                  <CardTitle className="border-0 p-0 text-base font-bold text-[#E0E0E0] shadow-none">
+                    Account
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-0 pb-0 pt-0">
+                <div className="grid grid-cols-3 gap-[9px]">
+                  <AccountGridButton onClick={() => goTo("security")}>
                     <span className={gridIconWrapClass}>
                       <ShieldCheck className="size-5" />
                     </span>
                     <span className="text-xs">Security</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={gridButtonClass}
-                    onClick={() => goTo("preferences")}
-                  >
+                  </AccountGridButton>
+                  <AccountGridButton onClick={() => goTo("preferences")}>
                     <span className={gridIconWrapClass}>
                       <Settings className="size-5" />
                     </span>
                     <span className="text-xs">Preferences</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={gridButtonClass}
-                    onClick={() => goTo("verification")}
-                  >
+                  </AccountGridButton>
+                  <AccountGridButton onClick={() => goTo("verification")}>
                     <span className={gridIconWrapClass}>
                       <ScanLine className="size-5" />
                     </span>
                     <span className="text-xs">Verification</span>
-                  </button>
-                  {/* INACTIVE: leads outside Account sidebar */}
-                  <button type="button" className={gridButtonClass} onClick={handleInactiveClick}>
+                  </AccountGridButton>
+                  <AccountGridButton onClick={handleInactiveClick}>
                     <span className={gridIconWrapClass}>
                       <MessageSquare className="size-5" />
                     </span>
                     <span className="text-xs">Live support</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={gridButtonClass}
-                    onClick={() => goTo("inbox")}
-                  >
+                  </AccountGridButton>
+                  <AccountGridButton onClick={() => goTo("inbox")}>
                     <span className={gridIconWrapClass}>
                       <Mail className="size-5" />
                     </span>
                     <span className="text-xs">Inbox</span>
-                  </button>
-                  {/* INACTIVE: leads outside Account sidebar */}
-                  <button type="button" className={gridButtonClass} onClick={handleInactiveClick}>
+                  </AccountGridButton>
+                  <AccountGridButton onClick={handleInactiveClick}>
                     <span className={gridIconWrapClass}>
                       <Gift className="size-5" />
                     </span>
                     <span className="text-xs">Promo code</span>
-                  </button>
+                  </AccountGridButton>
                 </div>
+                </CardContent>
+              </Card>
               </div>
 
               {/* Sign out — INACTIVE: leads outside Account sidebar */}
-              <div className="flex justify-center mt-auto mb-6 pt-4">
+              <div className="w-full shrink-0 p-4 pt-0">
                 <Button
                   variant="outline"
-                  className="rounded-full px-6 py-2 text-sm text-[#CFAEFF] bg-[#322A3C] border-0 shadow-none transition-all duration-[160ms] ease hover:bg-[#3A3146] hover:text-[#CFAEFF] hover:shadow-none focus-visible:ring-0 focus-visible:border-0"
+                  className="w-full rounded-full px-6 py-2 text-sm text-[#CFAEFF] bg-[#322A3C] border-0 shadow-none transition-all duration-[160ms] ease hover:bg-[#3A3146] hover:text-[#CFAEFF] hover:shadow-none focus-visible:ring-0 focus-visible:border-0"
                   onClick={handleInactiveClick}
                 >
                   Sign out
@@ -372,25 +406,27 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
                       onClose={closeEntireSidebar}
                     />
                     <div className="flex flex-col px-5 pt-5 pb-0">
-                      <h3 className="text-base font-bold text-[#E0E0E0] mb-1">
+                      <CardTitle className="mb-1 border-0 p-0 text-base font-bold text-[#E0E0E0] shadow-none">
                         Password
-                      </h3>
-                      <p className="text-sm text-[#8F8F8F]">
+                      </CardTitle>
+                      <CardDescription className="text-sm text-[#8F8F8F]">
                         Manage your login credentials
-                      </p>
+                      </CardDescription>
                       <Button
-                        className="bg-[#261F2B] rounded-full h-[49px] w-full mt-3 text-base font-bold hover:bg-[#2C2532]"
+                        className="mt-3 h-[49px] w-full rounded-full bg-[#261F2B] text-base font-bold hover:bg-[#2C2532]"
                         style={{ color: ACCENT_PURPLE }}
                       >
                         Change password
                       </Button>
                     </div>
+                    <Separator className="bg-[#2C2532]" />
                     <div className="flex flex-col px-5 pt-3 pb-5">
-                      <h3 className="text-base font-bold text-[#E0E0E0] mb-1">
+                      <CardTitle className="mb-1 border-0 p-0 text-base font-bold text-[#E0E0E0] shadow-none">
                         Two-factor authentication (2FA)
-                      </h3>
-                      <span
-                        className="inline-flex items-center gap-1 w-fit rounded-full px-2 h-5 text-[11px] font-medium"
+                      </CardTitle>
+                      <Badge
+                        variant="secondary"
+                        className="h-5 w-fit gap-1 rounded-full border-0 px-2 text-[11px] font-medium"
                         style={{
                           backgroundColor: ERROR_BG,
                           color: ERROR_TEXT,
@@ -398,12 +434,12 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
                       >
                         <ShieldCheck className="size-3.5" />
                         2FA is disabled
-                      </span>
-                      <p className="text-sm text-[#8F8F8F] mt-2">
+                      </Badge>
+                      <CardDescription className="mt-2 text-sm text-[#8F8F8F]">
                         Improve the security of your account by requiring
                         verification, using your phone, when signing in or
                         withdrawing funds:
-                      </p>
+                      </CardDescription>
                       <Button
                         className="bg-[#261F2B] rounded-full h-[49px] w-full mt-3 text-base font-bold hover:bg-[#2C2532]"
                         style={{ color: ACCENT_PURPLE }}
@@ -424,13 +460,21 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
                     <div className="flex flex-col p-5">
                       {/* Language */}
                       <div className="mb-8">
-                        <div className="bg-[#261F2B] rounded-xl flex items-center justify-between py-1 min-h-[49px] pl-3 pr-1">
-                          <span className="text-base font-bold text-[#E0E0E0]">
+                        <Card
+                          size="sm"
+                          className="gap-0 rounded-xl border-0 bg-[#261F2B] py-0 shadow-none ring-0"
+                        >
+                          <CardContent className="flex min-h-[49px] items-center justify-between py-1 pl-3 pr-1">
+                          <Label
+                            htmlFor="pref-language"
+                            className="cursor-pointer text-base font-bold text-[#E0E0E0]"
+                          >
                             Language
-                          </span>
+                          </Label>
                           <Select defaultValue="en">
                             <SelectTrigger
-                              className="border-0 bg-transparent w-auto text-sm font-bold shadow-none focus:ring-0"
+                              id="pref-language"
+                              className="w-auto border-0 bg-transparent text-sm font-bold shadow-none focus:ring-0"
                               style={{ color: ACCENT_PURPLE }}
                             >
                               <SelectValue placeholder="English" />
@@ -441,20 +485,29 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
                               <SelectItem value="es">Español</SelectItem>
                             </SelectContent>
                           </Select>
-                        </div>
-                        <p className="text-sm text-[#8F8F8F] px-4 pt-1">
+                          </CardContent>
+                        </Card>
+                        <CardDescription className="px-4 pt-1 text-sm text-[#8F8F8F]">
                           Choose your display language.
-                        </p>
+                        </CardDescription>
                       </div>
                       {/* Time zone */}
                       <div className="mb-8">
-                        <div className="bg-[#261F2B] rounded-xl flex items-center justify-between py-1 min-h-[49px] pl-3 pr-1">
-                          <span className="text-base font-bold text-[#E0E0E0]">
+                        <Card
+                          size="sm"
+                          className="gap-0 rounded-xl border-0 bg-[#261F2B] py-0 shadow-none ring-0"
+                        >
+                          <CardContent className="flex min-h-[49px] items-center justify-between py-1 pl-3 pr-1">
+                          <Label
+                            htmlFor="pref-timezone"
+                            className="cursor-pointer text-base font-bold text-[#E0E0E0]"
+                          >
                             Time zone
-                          </span>
+                          </Label>
                           <Select>
                             <SelectTrigger
-                              className="border-0 bg-transparent w-auto text-sm font-bold shadow-none focus:ring-0"
+                              id="pref-timezone"
+                              className="w-auto border-0 bg-transparent text-sm font-bold shadow-none focus:ring-0"
                               style={{ color: ACCENT_PURPLE }}
                             >
                               <SelectValue placeholder="Select time zone" />
@@ -465,20 +518,29 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
                               <SelectItem value="cet">CET</SelectItem>
                             </SelectContent>
                           </Select>
-                        </div>
-                        <p className="text-sm text-[#8F8F8F] px-4 pt-1">
+                          </CardContent>
+                        </Card>
+                        <CardDescription className="px-4 pt-1 text-sm text-[#8F8F8F]">
                           All event times show in your selected time zone.
-                        </p>
+                        </CardDescription>
                       </div>
                       {/* Odds format */}
                       <div className="mb-8">
-                        <div className="bg-[#261F2B] rounded-xl flex items-center justify-between py-1 min-h-[49px] pl-3 pr-1">
-                          <span className="text-base font-bold text-[#E0E0E0]">
+                        <Card
+                          size="sm"
+                          className="gap-0 rounded-xl border-0 bg-[#261F2B] py-0 shadow-none ring-0"
+                        >
+                          <CardContent className="flex min-h-[49px] items-center justify-between py-1 pl-3 pr-1">
+                          <Label
+                            htmlFor="pref-odds"
+                            className="cursor-pointer text-base font-bold text-[#E0E0E0]"
+                          >
                             Odds format
-                          </span>
+                          </Label>
                           <Select defaultValue="decimal">
                             <SelectTrigger
-                              className="border-0 bg-transparent w-auto text-sm font-bold shadow-none focus:ring-0"
+                              id="pref-odds"
+                              className="w-auto border-0 bg-transparent text-sm font-bold shadow-none focus:ring-0"
                               style={{ color: ACCENT_PURPLE }}
                             >
                               <SelectValue placeholder="Decimal" />
@@ -489,77 +551,110 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
                               <SelectItem value="american">American</SelectItem>
                             </SelectContent>
                           </Select>
-                        </div>
-                        <p className="text-sm text-[#8F8F8F] px-4 pt-1">
+                          </CardContent>
+                        </Card>
+                        <CardDescription className="px-4 pt-1 text-sm text-[#8F8F8F]">
                           Applies to all sports betting markets.
-                        </p>
+                        </CardDescription>
                       </div>
                       {/* Ghost mode */}
                       <div className="mb-8">
-                        <div className="bg-[#261F2B] rounded-xl flex items-center justify-between py-1 min-h-[49px] pl-3 pr-3">
-                          <span className="text-base font-bold text-[#E0E0E0]">
+                        <Card
+                          size="sm"
+                          className="gap-0 rounded-xl border-0 bg-[#261F2B] py-0 shadow-none ring-0"
+                        >
+                          <CardContent className="flex min-h-[49px] items-center justify-between py-1 pl-3 pr-3">
+                          <Label
+                            htmlFor="switch-ghost"
+                            className="cursor-pointer text-base font-bold text-[#E0E0E0]"
+                          >
                             Ghost mode
-                          </span>
+                          </Label>
                           <Switch
+                            id="switch-ghost"
                             checked={ghostMode}
                             onCheckedChange={setGhostMode}
                             className={preferenceSwitchClass}
                           />
-                        </div>
-                        <p className="text-sm text-[#8F8F8F] px-4 pt-1">
+                          </CardContent>
+                        </Card>
+                        <CardDescription className="px-4 pt-1 text-sm text-[#8F8F8F]">
                           Username and profile are visible everywhere.
-                        </p>
+                        </CardDescription>
                       </div>
                       {/* Responsible gambling */}
                       <div className="mb-8">
-                        <div className="bg-[#261F2B] rounded-xl flex items-center justify-between py-1 min-h-[49px] pl-3 pr-3">
-                          <span className="text-base font-bold text-[#E0E0E0]">
+                        <Card
+                          size="sm"
+                          className="gap-0 rounded-xl border-0 bg-[#261F2B] py-0 shadow-none ring-0"
+                        >
+                          <CardContent className="flex min-h-[49px] items-center justify-between py-1 pl-3 pr-3">
+                          <Label className="text-base font-bold text-[#E0E0E0]">
                             Responsible gambling
-                          </span>
-                          <span
-                            className="text-sm font-bold cursor-pointer"
+                          </Label>
+                          <Button
+                            type="button"
+                            variant="link"
+                            className="h-auto p-0 text-sm font-bold shadow-none"
                             style={{ color: ACCENT_PURPLE }}
                           >
                             Set up &gt;
-                          </span>
-                        </div>
-                        <p className="text-sm text-[#8F8F8F] px-4 pt-1">
+                          </Button>
+                          </CardContent>
+                        </Card>
+                        <CardDescription className="px-4 pt-1 text-sm text-[#8F8F8F]">
                           Set limits or take a break when you need it.
-                        </p>
+                        </CardDescription>
                       </div>
                       {/* Early access */}
                       <div className="mb-8">
-                        <div className="bg-[#261F2B] rounded-xl flex items-center justify-between py-1 min-h-[49px] pl-3 pr-3">
-                          <span className="text-base font-bold text-[#E0E0E0]">
+                        <Card
+                          size="sm"
+                          className="gap-0 rounded-xl border-0 bg-[#261F2B] py-0 shadow-none ring-0"
+                        >
+                          <CardContent className="flex min-h-[49px] items-center justify-between py-1 pl-3 pr-3">
+                          <Label
+                            htmlFor="switch-early"
+                            className="cursor-pointer text-base font-bold text-[#E0E0E0]"
+                          >
                             Early access
-                          </span>
+                          </Label>
                           <Switch
+                            id="switch-early"
                             checked={earlyAccess}
                             onCheckedChange={setEarlyAccess}
                             className={preferenceSwitchClass}
                           />
-                        </div>
-                        <p className="text-sm text-[#8F8F8F] px-4 pt-1">
+                          </CardContent>
+                        </Card>
+                        <CardDescription className="px-4 pt-1 text-sm text-[#8F8F8F]">
                           Get early access to new and experimental features
                           before public release.
-                        </p>
+                        </CardDescription>
                       </div>
                       {/* API key */}
                       <div className="mb-8">
-                        <div className="bg-[#261F2B] rounded-xl flex items-center justify-between py-1 min-h-[49px] pl-3 pr-3">
-                          <span className="text-base font-bold text-[#E0E0E0]">
+                        <Card
+                          size="sm"
+                          className="gap-0 rounded-xl border-0 bg-[#261F2B] py-0 shadow-none ring-0"
+                        >
+                          <CardContent className="flex min-h-[49px] items-center justify-between py-1 pl-3 pr-3">
+                          <Label className="text-base font-bold text-[#E0E0E0]">
                             API key
-                          </span>
-                          <span
-                            className="text-sm font-bold cursor-pointer"
+                          </Label>
+                          <Button
+                            type="button"
+                            variant="link"
+                            className="h-auto p-0 text-sm font-bold shadow-none"
                             style={{ color: ACCENT_PURPLE }}
                           >
                             Generate key
-                          </span>
-                        </div>
-                        <p className="text-sm text-[#8F8F8F] px-4 pt-1">
+                          </Button>
+                          </CardContent>
+                        </Card>
+                        <CardDescription className="px-4 pt-1 text-sm text-[#8F8F8F]">
                           Connect for automated trading.
-                        </p>
+                        </CardDescription>
                       </div>
                     </div>
                   </>
@@ -572,10 +667,14 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
                       onBack={goBack}
                       onClose={closeEntireSidebar}
                     />
-                    <p className="px-5 pt-2 text-sm text-[#8F8F8F]">
-                      Verifying your identity keeps your account secure and your
-                      access seamless.
-                    </p>
+                    <Card className="mx-5 mt-2 border-0 bg-transparent px-0 pt-2 shadow-none ring-0">
+                      <CardContent className="px-0 py-0">
+                        <CardDescription className="text-sm text-[#8F8F8F]">
+                          Verifying your identity keeps your account secure and your
+                          access seamless.
+                        </CardDescription>
+                      </CardContent>
+                    </Card>
                     {/* N steps, N-1 connectors only; gap-0 between stacked rows so bars fill circle-to-circle */}
                     <div className="px-5 pt-4 pb-4 flex flex-col gap-0">
                       {(
@@ -591,14 +690,16 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
                               </div>
                             ),
                             card: (
-                              <div className="rounded-xl bg-zinc-900 px-4 py-3 min-w-0 flex-1">
+                              <Card className="min-w-0 flex-1 gap-0 rounded-xl border-0 bg-zinc-900 py-0 shadow-none ring-0">
+                                <CardContent className="px-4 py-3">
                                 <div className="flex items-center gap-3">
-                                  <Mail className="size-5 text-[#8F8F8F] shrink-0" />
-                                  <span className="text-sm text-[#8F8F8F]">
+                                  <Mail className="size-5 shrink-0 text-[#8F8F8F]" />
+                                  <CardTitle className="border-0 p-0 text-sm font-normal text-[#8F8F8F] shadow-none">
                                     Email Verification
-                                  </span>
+                                  </CardTitle>
                                 </div>
-                              </div>
+                                </CardContent>
+                              </Card>
                             ),
                           },
                           {
@@ -612,14 +713,16 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
                               </div>
                             ),
                             card: (
-                              <div className="rounded-xl bg-zinc-900 px-4 py-3 min-w-0 flex-1">
+                              <Card className="min-w-0 flex-1 gap-0 rounded-xl border-0 bg-zinc-900 py-0 shadow-none ring-0">
+                                <CardContent className="px-4 py-3">
                                 <div className="flex items-center gap-3">
-                                  <Phone className="size-5 text-[#8F8F8F] shrink-0" />
-                                  <span className="text-sm text-[#8F8F8F]">
+                                  <Phone className="size-5 shrink-0 text-[#8F8F8F]" />
+                                  <CardTitle className="border-0 p-0 text-sm font-normal text-[#8F8F8F] shadow-none">
                                     Phone Verification
-                                  </span>
+                                  </CardTitle>
                                 </div>
-                              </div>
+                                </CardContent>
+                              </Card>
                             ),
                           },
                           {
@@ -630,31 +733,35 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
                               </div>
                             ),
                             card: (
-                              <div className="rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-4 min-w-0 flex-1">
+                              <Card className="min-w-0 flex-1 gap-0 rounded-xl border border-zinc-700 bg-zinc-800 py-0 shadow-none ring-0">
+                                <CardContent className="px-4 py-4">
                                 <div className="flex items-center gap-3">
-                                  <ScanLine className="size-5 text-[#E0E0E0] shrink-0" />
-                                  <span className="text-base font-bold text-[#E0E0E0]">
+                                  <ScanLine className="size-5 shrink-0 text-[#E0E0E0]" />
+                                  <CardTitle className="border-0 p-0 text-base font-bold text-[#E0E0E0] shadow-none">
                                     Identity Verification
-                                  </span>
+                                  </CardTitle>
                                 </div>
-                                <p className="text-sm text-[#8F8F8F] mt-2">
+                                <CardDescription className="mt-2 text-sm text-[#8F8F8F]">
                                   Before you start, have your <strong>ID</strong>{" "}
                                   and <strong>proof of address</strong> ready to
                                   speed things up. The list of accepted documents
                                   can be found{" "}
-                                  <a
-                                    href="#"
-                                    className="inline-flex items-center gap-0.5 text-[#CCA6FF] hover:underline"
+                                  <Button
+                                    type="button"
+                                    variant="link"
+                                    className="inline-flex h-auto gap-0.5 p-0 text-[#CCA6FF] hover:underline"
+                                    onClick={(e) => e.preventDefault()}
                                   >
                                     here
-                                    <ExternalLink className="size-3.5 inline" />
-                                  </a>
+                                    <ExternalLink className="inline size-3.5" />
+                                  </Button>
                                   .
-                                </p>
-                                <Button className="bg-[#CCFF00] text-black font-bold text-base rounded-full h-[49px] w-full mt-3 hover:bg-[#b8e600]">
+                                </CardDescription>
+                                <Button className="mt-3 h-[49px] w-full rounded-full bg-[#CCFF00] text-base font-bold text-black hover:bg-[#b8e600]">
                                   Verify identity
                                 </Button>
-                              </div>
+                                </CardContent>
+                              </Card>
                             ),
                           },
                         ] as const
@@ -690,27 +797,29 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
                         </React.Fragment>
                       ))}
                     </div>
-                    <div className="px-5 mt-auto mb-5">
-                      <div
-                        className="rounded-[12px] bg-[#141114] p-4 flex items-center gap-3 border border-purple-500/40 shadow-[0_0_12px_rgba(168,85,247,0.15)]"
-                      >
-                        <div className="size-14 rounded-full bg-violet-500/35 flex items-center justify-center shrink-0">
+                    <div className="mx-5 mt-auto mb-5">
+                      <Card className="gap-0 rounded-[12px] border border-purple-500/40 bg-[#141114] py-0 shadow-[0_0_12px_rgba(168,85,247,0.15)] ring-0">
+                        <CardContent className="flex items-center gap-3 p-4">
+                        <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-violet-500/35">
                           <ShieldCheck className="size-8 text-violet-400" />
                         </div>
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-sm font-bold text-[#E0E0E0]">
+                        <div className="flex min-w-0 flex-col">
+                          <CardTitle className="border-0 p-0 text-sm font-bold text-[#E0E0E0] shadow-none">
                             Secure your account.
-                          </span>
-                          <span className="text-sm font-bold text-[#E0E0E0]">
+                          </CardTitle>
+                          <CardTitle className="border-0 p-0 text-sm font-bold text-[#E0E0E0] shadow-none">
                             Get the full experience.
-                          </span>
-                          <ul className="text-xs text-[#8F8F8F] mt-1 list-disc list-inside space-y-0.5">
-                            <li>Stronger security & fraud protection</li>
-                            <li>Faster & unlimited withdrawals</li>
-                            <li>Unlock full features & VIP perks</li>
-                          </ul>
+                          </CardTitle>
+                          <CardDescription className="mt-1 text-xs text-[#8F8F8F]">
+                            <ul className="list-inside list-disc space-y-0.5">
+                              <li>Stronger security & fraud protection</li>
+                              <li>Faster & unlimited withdrawals</li>
+                              <li>Unlock full features & VIP perks</li>
+                            </ul>
+                          </CardDescription>
                         </div>
-                      </div>
+                        </CardContent>
+                      </Card>
                     </div>
                   </>
                 )}
@@ -726,12 +835,12 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
                       <div className="relative">
                         <MailOpen className="size-16 text-zinc-600 mx-auto" />
                       </div>
-                      <h3 className="text-base font-bold text-[#E0E0E0] mt-4">
+                      <CardTitle className="mt-4 border-0 p-0 text-base font-bold text-[#E0E0E0] shadow-none">
                         Nothing new
-                      </h3>
-                      <p className="text-sm text-[#8F8F8F] mt-1">
-                        You're all caught up.
-                      </p>
+                      </CardTitle>
+                      <CardDescription className="mt-1 text-sm text-[#8F8F8F]">
+                        You&apos;re all caught up.
+                      </CardDescription>
                       <Button
                         className="bg-[#261F2B] rounded-full h-[49px] px-6 mt-4 text-sm font-bold hover:bg-[#2C2532]"
                         style={{ color: ACCENT_PURPLE }}
@@ -745,20 +854,15 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
             )
           )}
 
-        {/* Inactive-button toast: small, premium dark UI, auto-dismiss ~2.5s */}
-        {showInactiveToast && (
-          <div
-            className="absolute bottom-6 left-6 right-6 z-50 px-4 py-3 rounded-xl bg-[#1E1A22] border border-[#2C2532] text-[#E0E0E0] text-sm shadow-lg animate-in fade-in duration-200"
-            role="status"
-            aria-live="polite"
-          >
-            {INACTIVE_TOAST_MESSAGE}
-          </div>
-        )}
         </div>
+        </ScrollArea>
       </SheetContent>
     </Sheet>
-    <MyProfilePanel open={myProfileOpen} onClose={closeEntireSidebar} />
+    <MyProfilePanel
+      open={myProfileOpen}
+      onBack={() => setMyProfileOpen(false)}
+      onClose={closeEntireSidebar}
+    />
     </>
   );
 }
