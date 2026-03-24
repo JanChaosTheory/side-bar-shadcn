@@ -81,13 +81,13 @@ export function MyProfilePanel({ open, onClose }: MyProfilePanelProps) {
         side="right"
         showCloseButton={false}
         className={cn(
-          "w-[420px] max-w-[100vw] p-0 gap-0 overflow-y-auto border-0 shadow-xl z-[60]",
+          "w-[420px] max-w-[min(100vw,100%)] p-0 gap-0 overflow-y-auto overflow-x-hidden border-0 shadow-xl z-[60]",
           // Match Account sidebar: round inner top corner, flush to right edge
           "rounded-tl-[28px] rounded-bl-none rounded-r-none border-l"
         )}
         style={{ backgroundColor: BG, borderColor: BORDER }}
       >
-        <div className="flex flex-col min-h-full [font-family:var(--font-inter),sans-serif]">
+        <div className="flex min-h-full min-w-0 flex-col [font-family:var(--font-inter),sans-serif]">
           {/* Header */}
           <header
             className="sticky top-0 z-10 grid grid-cols-[auto_1fr_auto] items-center gap-2 px-4 py-3 shrink-0 border-b relative"

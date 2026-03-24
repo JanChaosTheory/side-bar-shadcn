@@ -160,11 +160,11 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
         side="right"
         showCloseButton={false}
         className={cn(
-          "w-[448px] max-w-[100vw] rounded-tl-[28px] rounded-bl-none rounded-r-none p-0 gap-0 overflow-y-auto",
+          "w-[448px] max-w-[min(100vw,100%)] rounded-tl-[28px] rounded-bl-none rounded-r-none p-0 gap-0 overflow-y-auto overflow-x-hidden",
           "bg-[#141114] border-0 border-l border-[#2C2532]"
         )}
       >
-        <div className="relative flex flex-col min-h-full [font-family:var(--font-inter),sans-serif]">
+        <div className="relative flex min-h-full min-w-0 flex-col [font-family:var(--font-inter),sans-serif]">
           {/* Main screen */}
           <div
             className={cn(
@@ -178,7 +178,7 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
             <div className="flex flex-col flex-1 px-5">
               {/* Profile card */}
               <div className="rounded-[24px] p-[2px] border border-zinc-800/40">
-                <div className="bg-[#141114] rounded-[22.5px] h-[72px] flex items-center">
+                <div className="bg-[#141114] rounded-[22.5px] h-[72px] flex min-w-0 items-center">
                   <div
                     className="size-[72px] rounded-full flex items-center justify-center shrink-0 text-xl font-bold text-zinc-800"
                     style={{ backgroundColor: AVATAR_BG }}
@@ -219,8 +219,8 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
               <div className="mt-4 flex items-center gap-2 bg-[#1E1A22] rounded-2xl p-2 w-full min-h-[53px]">
                 <AlertCircle className="text-amber-500 size-8 shrink-0" />
                 <div className="flex flex-col min-w-0">
-                  <span className="text-sm font-bold text-[#E0E0E0] whitespace-nowrap">
-                    You're not verified yet!
+                  <span className="text-sm font-bold text-[#E0E0E0] min-w-0 break-words">
+                    You&apos;re not verified yet!
                   </span>
                   <span className="text-xs text-[#8F8F8F]">
                     Enjoy faster payouts, safer play, and no limits by verifying
