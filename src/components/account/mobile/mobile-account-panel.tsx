@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { AnimatePresence, motion, type PanInfo } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import {
@@ -42,18 +43,66 @@ export function MobileAccountPanel({
   onRequestClose,
 }: MobileAccountPanelProps) {
   const [screen, setScreen] = React.useState<MobileScreen>("root");
+  const [dragRightMax, setDragRightMax] = React.useState(800);
+  const directionRef = React.useRef<"forward" | "back">("forward");
+  const panelBoundsRef = React.useRef<HTMLDivElement>(null);
+
+  React.useLayoutEffect(() => {
+    const update = () => {
+      const w = panelBoundsRef.current?.clientWidth ?? window.innerWidth;
+      setDragRightMax(Math.max(w, window.innerWidth));
+    };
+    update();
+    window.addEventListener("resize", update);
+    const el = panelBoundsRef.current;
+    const ro =
+      el && typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(update)
+        : null;
+    if (el && ro) ro.observe(el);
+    return () => {
+      window.removeEventListener("resize", update);
+      ro?.disconnect();
+    };
+  }, [open]);
+
+  const slideVariants = React.useMemo(
+    () => ({
+      enter: () => ({
+        x: directionRef.current === "forward" ? "100%" : "-100%",
+      }),
+      center: { x: 0 },
+      exit: () => ({
+        x: directionRef.current === "forward" ? "-100%" : "100%",
+      }),
+    }),
+    []
+  );
 
   React.useEffect(() => {
-    if (!open) setScreen("root");
+    if (!open) {
+      setScreen("root");
+      directionRef.current = "forward";
+    }
   }, [open]);
+
+  const navigateTo = React.useCallback((s: MobileScreen) => {
+    directionRef.current = "forward";
+    setScreen(s);
+  }, []);
+
+  const navigateBack = React.useCallback(() => {
+    directionRef.current = "back";
+    setScreen("root");
+  }, []);
 
   const nav = React.useMemo<MobileNav>(
     () => ({
-      go: (s) => setScreen(s),
-      back: () => setScreen("root"),
+      go: navigateTo,
+      back: navigateBack,
       close: onRequestClose,
     }),
-    [onRequestClose]
+    [navigateTo, navigateBack, onRequestClose]
   );
 
   const onSignOut = React.useCallback(() => {
@@ -65,7 +114,37 @@ export function MobileAccountPanel({
   }, []);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col [font-family:var(--font-inter),sans-serif]">
+    <div
+      ref={panelBoundsRef}
+      className="flex min-h-0 flex-1 flex-col overflow-hidden [font-family:var(--font-inter),sans-serif]"
+    >
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={screen}
+          className="flex min-h-0 flex-1 flex-col"
+          variants={slideVariants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          {...(screen !== "root"
+            ? {
+                drag: "x" as const,
+                dragDirectionLock: true,
+                dragConstraints: { left: 0, right: dragRightMax },
+                dragElastic: { left: 0, right: 0.5 },
+                dragMomentum: false,
+                onDragEnd: (
+                  _e: MouseEvent | TouchEvent | PointerEvent,
+                  info: PanInfo
+                ) => {
+                  if (info.offset.x > window.innerWidth * 0.4) {
+                    navigateBack();
+                  }
+                },
+              }
+            : {})}
+        >
       {screen === "root" ? (
         <>
           <MobileAccountHeader variant="root" onClose={nav.close} />
@@ -198,6 +277,8 @@ export function MobileAccountPanel({
           <MobilePlaceholderScreen screen={screen} />
         </>
       )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
