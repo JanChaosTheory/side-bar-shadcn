@@ -15,7 +15,7 @@ export default function Home() {
       />
       <Card className="mt-4 border-0 bg-transparent py-0 shadow-none ring-0">
         <CardDescription className="text-center text-sm text-zinc-500 dark:text-zinc-400">
-          Click “Open Account” to open the sidebar.
+          Full-width overlay on narrow viewports; side panel on larger screens.
         </CardDescription>
       </Card>
     </Card>

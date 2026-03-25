@@ -71,6 +71,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MyProfilePanel } from "@/components/my-profile-panel";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { MobileAccountPanel } from "@/components/account/mobile/mobile-account-panel";
+import { MOBILE_BG } from "@/components/account/mobile/constants";
 
 type Screen = "main" | "security" | "preferences" | "verification" | "inbox";
 
@@ -303,6 +306,7 @@ const preferenceSwitchClass =
   "group/switch !h-[26px] !w-[44px] rounded-full border-0 shadow-none transition-colors duration-200 ease-out focus-visible:ring-0 !data-unchecked:bg-[#463A54] !data-checked:bg-[#5A4A69] [&_[data-slot=switch-thumb]]:!size-5 [&_[data-slot=switch-thumb]]:!bg-[#BDBDBD] [&_[data-slot=switch-thumb]]:transition-transform [&_[data-slot=switch-thumb]]:duration-200 [&_[data-slot=switch-thumb]]:translate-x-0 [&_[data-slot=switch-thumb]]:data-checked:translate-x-[20px]";
 
 export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
+  const isMobile = useMediaQuery("(max-width: 767px)");
   const [open, setOpen] = React.useState(false);
   const [screen, setScreen] = React.useState<Screen>("main");
   const [ghostMode, setGhostMode] = React.useState(false);
@@ -370,10 +374,16 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
         side="right"
         showCloseButton={false}
         className={cn(
-          "flex h-[100dvh] max-h-[100dvh] w-[448px] max-w-[100vw] flex-col overflow-hidden rounded-tl-[28px] rounded-bl-none rounded-r-none p-0 gap-0",
-          "bg-[#141114] border-0 border-l border-[#2C2532]"
+          "flex max-h-dvh flex-col gap-0 overflow-hidden p-0",
+          isMobile
+            ? "h-dvh !w-full !max-w-full rounded-none border-0 shadow-xl sm:!max-w-full data-[side=right]:!w-full"
+            : "h-[100dvh] max-h-[100dvh] w-[448px] max-w-[100vw] rounded-tl-[28px] rounded-bl-none rounded-r-none border-0 border-l border-[#2C2532] bg-[#141114]"
         )}
+        style={isMobile ? { backgroundColor: MOBILE_BG } : undefined}
       >
+        {isMobile ? (
+          <MobileAccountPanel open={open} onRequestClose={closeEntireSidebar} />
+        ) : (
         <Card className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-none border-0 bg-transparent py-0 shadow-none ring-0 gap-0 [font-family:var(--font-inter),sans-serif]">
           {/* Main screen: fill sheet height so scroll area flex-1 grows and Sign out stays at bottom */}
           <Card
@@ -1167,10 +1177,11 @@ export function AccountSidebar({ trigger }: { trigger: React.ReactNode }) {
           )}
 
         </Card>
+        )}
       </SheetContent>
     </Sheet>
     <MyProfilePanel
-      open={myProfileOpen}
+      open={myProfileOpen && !isMobile}
       onBack={() => setMyProfileOpen(false)}
       onClose={closeEntireSidebar}
     />

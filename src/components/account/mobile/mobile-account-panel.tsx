@@ -1,0 +1,203 @@
+"use client";
+
+import * as React from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
+import {
+  ArrowDownToLine,
+  ArrowUpToLine,
+  BadgeCheck,
+  History,
+  Mail,
+  MessageSquare,
+  Settings,
+  ShieldCheck,
+  Ticket,
+} from "lucide-react";
+import type { MobileNav, MobileScreen } from "./constants";
+import { MobileAccountHeader } from "./mobile-account-header";
+import { MobileUserCard } from "./mobile-user-card";
+import { MobileVerificationBanner } from "./mobile-verification-banner";
+import { MobileLoyaltyCard } from "./mobile-loyalty-card";
+import { MobileTileSection } from "./mobile-tile-section";
+import { MobileActionTile } from "./mobile-action-tile";
+import { MobileStickyFooter } from "./mobile-sticky-footer";
+import { MobileSecurityScreen } from "./screens/security";
+import { MobilePreferencesScreen } from "./screens/preferences";
+import { MobileVerificationScreen } from "./screens/verification";
+import { MobileMyProfileScreen } from "./screens/my-profile";
+import { MobileInboxScreen } from "./screens/inbox";
+import { MobilePlaceholderScreen } from "./screens/placeholder";
+
+const SIGN_OUT_TOAST =
+  "Sign out is inactive in this prototype — same as desktop Account sidebar.";
+
+export type MobileAccountPanelProps = {
+  open: boolean;
+  onRequestClose: () => void;
+};
+
+export function MobileAccountPanel({
+  open,
+  onRequestClose,
+}: MobileAccountPanelProps) {
+  const [screen, setScreen] = React.useState<MobileScreen>("root");
+
+  React.useEffect(() => {
+    if (!open) setScreen("root");
+  }, [open]);
+
+  const nav = React.useMemo<MobileNav>(
+    () => ({
+      go: (s) => setScreen(s),
+      back: () => setScreen("root"),
+      close: onRequestClose,
+    }),
+    [onRequestClose]
+  );
+
+  const onSignOut = React.useCallback(() => {
+    toast(SIGN_OUT_TOAST, {
+      duration: 2500,
+      className:
+        "!bg-[#1E1A22] !border !border-[#2C2532] !text-[#E0E0E0] !rounded-xl !text-sm !shadow-lg",
+    });
+  }, []);
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col [font-family:var(--font-inter),sans-serif]">
+      {screen === "root" ? (
+        <>
+          <MobileAccountHeader variant="root" onClose={nav.close} />
+          <ScrollArea hideScrollbar className="min-h-0 flex-1">
+            <div className="flex flex-col gap-3 pb-4 pt-3">
+              <MobileUserCard nav={nav} />
+              <MobileVerificationBanner nav={nav} />
+              <MobileLoyaltyCard />
+              <MobileTileSection title="Wallet">
+                <MobileActionTile
+                  icon={ArrowUpToLine}
+                  label="Deposit"
+                  onClick={() => nav.go("deposit")}
+                />
+                <MobileActionTile
+                  icon={ArrowDownToLine}
+                  label="Withdraw"
+                  onClick={() => nav.go("withdraw")}
+                />
+                <MobileActionTile
+                  icon={History}
+                  label="History"
+                  onClick={() => nav.go("history")}
+                />
+              </MobileTileSection>
+              <MobileTileSection title="Account">
+                <MobileActionTile
+                  icon={ShieldCheck}
+                  label="Security"
+                  onClick={() => nav.go("security")}
+                />
+                <MobileActionTile
+                  icon={Settings}
+                  label="Preferences"
+                  onClick={() => nav.go("preferences")}
+                />
+                <MobileActionTile
+                  icon={BadgeCheck}
+                  label="Verification"
+                  onClick={() => nav.go("verification")}
+                />
+                <MobileActionTile
+                  icon={MessageSquare}
+                  label="Live support"
+                  onClick={() => nav.go("live-support")}
+                />
+                <MobileActionTile
+                  icon={Mail}
+                  label="Inbox"
+                  onClick={() => nav.go("inbox")}
+                />
+                <MobileActionTile
+                  icon={Ticket}
+                  label="Promo code"
+                  onClick={() => nav.go("promo-code")}
+                />
+              </MobileTileSection>
+            </div>
+          </ScrollArea>
+          <MobileStickyFooter onSignOut={onSignOut} />
+        </>
+      ) : screen === "security" ? (
+        <>
+          <MobileAccountHeader
+            variant="sub"
+            title="Security"
+            onBack={nav.back}
+            onClose={nav.close}
+          />
+          <MobileSecurityScreen />
+        </>
+      ) : screen === "preferences" ? (
+        <>
+          <MobileAccountHeader
+            variant="sub"
+            title="Preferences"
+            onBack={nav.back}
+            onClose={nav.close}
+          />
+          <MobilePreferencesScreen />
+        </>
+      ) : screen === "verification" ? (
+        <>
+          <MobileAccountHeader
+            variant="verification"
+            title="Verification"
+            onBack={nav.back}
+            onClose={nav.close}
+          />
+          <MobileVerificationScreen />
+        </>
+      ) : screen === "my-profile" ? (
+        <>
+          <MobileAccountHeader
+            variant="sub"
+            title="My profile"
+            onBack={nav.back}
+            onClose={nav.close}
+          />
+          <MobileMyProfileScreen />
+        </>
+      ) : screen === "inbox" ? (
+        <>
+          <MobileAccountHeader
+            variant="sub"
+            title="Inbox"
+            onBack={nav.back}
+            onClose={nav.close}
+          />
+          <MobileInboxScreen />
+        </>
+      ) : (
+        <>
+          <MobileAccountHeader
+            variant="sub"
+            title={
+              screen === "deposit"
+                ? "Deposit"
+                : screen === "withdraw"
+                  ? "Withdraw"
+                  : screen === "history"
+                    ? "History"
+                    : screen === "live-support"
+                      ? "Live support"
+                      : "Promo code"
+            }
+            onBack={nav.back}
+            onClose={nav.close}
+          />
+          <MobilePlaceholderScreen screen={screen} />
+        </>
+      )}
+    </div>
+  );
+}
