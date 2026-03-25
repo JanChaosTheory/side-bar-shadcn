@@ -1,7 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { AnimatePresence, motion, type PanInfo } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useAnimate,
+  type PanInfo,
+} from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import {
@@ -33,6 +38,11 @@ import { MobilePlaceholderScreen } from "./screens/placeholder";
 const SIGN_OUT_TOAST =
   "Sign out is inactive in this prototype — same as desktop Account sidebar.";
 
+/** Fraction of panel width to trigger back (increased sensitivity). */
+const SWIPE_BACK_DISTANCE_RATIO = 0.22;
+/** Fast rightward flick completes back even below distance threshold (px/s). */
+const SWIPE_BACK_MIN_VELOCITY_X = 380;
+
 export type MobileAccountPanelProps = {
   open: boolean;
   onRequestClose: () => void;
@@ -46,11 +56,12 @@ export function MobileAccountPanel({
   const [dragRightMax, setDragRightMax] = React.useState(800);
   const directionRef = React.useRef<"forward" | "back">("forward");
   const panelBoundsRef = React.useRef<HTMLDivElement>(null);
+  const [dragLayerRef, dragSnapAnimate] = useAnimate();
 
   React.useLayoutEffect(() => {
     const update = () => {
-      const w = panelBoundsRef.current?.clientWidth ?? window.innerWidth;
-      setDragRightMax(Math.max(w, window.innerWidth));
+      const w = panelBoundsRef.current?.clientWidth ?? 0;
+      setDragRightMax(w > 0 ? w : window.innerWidth);
     };
     update();
     window.addEventListener("resize", update);
@@ -120,6 +131,7 @@ export function MobileAccountPanel({
     >
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
+          ref={dragLayerRef}
           key={screen}
           className="flex min-h-0 flex-1 flex-col"
           variants={slideVariants}
@@ -132,14 +144,28 @@ export function MobileAccountPanel({
                 drag: "x" as const,
                 dragDirectionLock: true,
                 dragConstraints: { left: 0, right: dragRightMax },
-                dragElastic: { left: 0, right: 0.5 },
+                dragElastic: 0,
                 dragMomentum: false,
                 onDragEnd: (
                   _e: MouseEvent | TouchEvent | PointerEvent,
                   info: PanInfo
                 ) => {
-                  if (info.offset.x > window.innerWidth * 0.4) {
+                  const panelW =
+                    panelBoundsRef.current?.clientWidth ?? dragRightMax;
+                  const distOk =
+                    info.offset.x > panelW * SWIPE_BACK_DISTANCE_RATIO;
+                  const velOk = info.velocity.x > SWIPE_BACK_MIN_VELOCITY_X;
+                  if (distOk || velOk) {
                     navigateBack();
+                    return;
+                  }
+                  const el = dragLayerRef.current;
+                  if (el) {
+                    void dragSnapAnimate(
+                      el,
+                      { x: 0 },
+                      { type: "spring", stiffness: 400, damping: 38 }
+                    );
                   }
                 },
               }
