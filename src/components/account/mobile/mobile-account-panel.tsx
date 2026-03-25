@@ -138,7 +138,7 @@ export function MobileAccountPanel({
           initial="enter"
           animate="center"
           exit="exit"
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          transition={{ type: "spring", stiffness: 450, damping: 45 }}
           {...(screen !== "root"
             ? {
                 drag: "x" as const,
@@ -164,7 +164,7 @@ export function MobileAccountPanel({
                     void dragSnapAnimate(
                       el,
                       { x: 0 },
-                      { type: "spring", stiffness: 400, damping: 38 }
+                      { type: "spring", stiffness: 600, damping: 57 }
                     );
                   }
                 },
